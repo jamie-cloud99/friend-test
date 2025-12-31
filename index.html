@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>友情記憶測驗 - 平昕與宜潔的回憶之旅</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 幾何裝飾背景 -->
+    <div class="background-decorations">
+        <svg class="decoration decoration-1" viewBox="0 0 100 100">
+            <path d="M50 10 L50 90 M10 50 L90 50 M25 25 L75 75 M75 25 L25 75"
+                  stroke="currentColor" stroke-width="1" opacity="0.15"/>
+        </svg>
+        <svg class="decoration decoration-2" viewBox="0 0 200 100">
+            <path d="M10 50 Q 50 10, 100 50 T 190 50"
+                  stroke="currentColor" stroke-width="2"
+                  fill="none" stroke-dasharray="5,5" opacity="0.1"/>
+        </svg>
+        <svg class="decoration decoration-3" viewBox="0 0 100 100">
+            <circle cx="30" cy="50" r="15" fill="currentColor" opacity="0.08"/>
+            <circle cx="70" cy="50" r="15" fill="currentColor" opacity="0.08"/>
+            <line x1="45" y1="50" x2="55" y2="50"
+                  stroke="currentColor" stroke-width="4" opacity="0.08"/>
+        </svg>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="game-container">
+
+        <!-- 進度條容器（在題目階段顯示） -->
+        <div id="progress-container" class="progress-container hidden">
+            <div class="progress-info">
+                <span class="progress-text">第 <span id="current-question">1</span> / <span id="total-questions">5</span> 題</span>
+                <span class="progress-stage">友情回憶</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 封面畫面 -->
+        <div id="start-screen" class="screen active">
+            <div class="start-content">
+                <h1 class="title">
+                    <span class="title-line">友情記憶測驗</span>
+                    <span class="title-subtitle">平昕與宜潔的冬日回顧</span>
+                </h1>
+
+                <div class="start-description">
+                    <p>在這個冬日，讓我們一起重溫那些珍貴的對話片段</p>
+                    <p>測試彼此的了解，看看你們的友情屬於哪一型</p>
+                </div>
+
+                <!-- 題目數選擇 -->
+                <div class="question-count-selector">
+                    <div class="selector-label">選擇題目數量</div>
+                    <div class="selector-options">
+                        <button class="count-option active" data-count="10">
+                            <span class="count-number">10</span>
+                            <span class="count-label">標準版</span>
+                        </button>
+                        <button class="count-option" data-count="15">
+                            <span class="count-number">15</span>
+                            <span class="count-label">深度版</span>
+                        </button>
+                        <button class="count-option" data-count="20">
+                            <span class="count-number">20</span>
+                            <span class="count-label">完整版</span>
+                        </button>
+                    </div>
+                    <div class="selector-hint">預設 10 題，約 8-10 分鐘</div>
+                </div>
+
+                <button id="start-button" class="btn btn-primary btn-large">
+                    開始回憶之旅
+                </button>
+            </div>
+        </div>
+
+        <!-- 題目畫面 -->
+        <div id="question-screen" class="screen">
+            <div class="question-content">
+                <!-- 題目卡片 -->
+                <div id="question-card" class="question-card">
+                    <div class="question-type" id="question-type">時間記憶</div>
+                    <h2 class="question-text" id="question-text">問題會顯示在這裡</h2>
+
+                    <div id="options-container" class="options-container">
+                        <!-- 選項會動態插入 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 對話回顧畫面 -->
+        <div id="chat-replay-screen" class="screen">
+            <div class="chat-replay-content">
+                <!-- LINE 聊天視窗 -->
+                <div id="line-chat-container" class="line-chat-container">
+                    <div class="line-chat-header">
+                        <div class="chat-back-btn"></div>
+                        <div class="chat-title" id="chat-title">與量角器的聊天記錄</div>
+                        <div class="chat-menu"></div>
+                    </div>
+                    <div class="line-chat-date">
+                        <span id="chat-date">2019/09/28(六)</span>
+                    </div>
+                    <div id="line-chat-body" class="line-chat-body">
+                        <!-- 訊息會動態插入這裡 -->
+                    </div>
+                </div>
+                <button id="skip-chat-button" class="btn btn-secondary skip-chat-btn">
+                    跳過對話 ⏭
+                </button>
+            </div>
+        </div>
+
+        <!-- 答案反饋畫面 -->
+        <div id="feedback-screen" class="screen">
+            <div class="feedback-content">
+                <!-- 答案反饋 -->
+                <div id="answer-feedback" class="answer-feedback">
+                    <div class="feedback-icon" id="feedback-icon"></div>
+                    <div class="feedback-title" id="feedback-title">回答正確</div>
+                    <div class="feedback-explanation" id="feedback-explanation">說明文字</div>
+
+                    <button id="next-button" class="btn btn-primary">下一題</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 過場畫面 -->
+        <div id="transition-screen" class="screen">
+            <div class="transition-content">
+                <div class="transition-progress">
+                    <div class="transition-progress-text">
+                        已完成 <span id="transition-completed">5</span> / <span id="transition-total">5</span> 題
+                    </div>
+                    <div class="transition-progress-bar">
+                        <div id="transition-progress-fill" class="transition-progress-fill"></div>
+                    </div>
+                </div>
+
+                <h2 class="transition-stage" id="transition-stage">初識回憶</h2>
+                <p class="transition-message" id="transition-message">你們的回憶才剛開始</p>
+
+                <div class="transition-decoration">
+                    <svg viewBox="0 0 200 200" width="150" height="150">
+                        <circle cx="100" cy="100" r="80" fill="none"
+                                stroke="var(--primary-blue)" stroke-width="2"
+                                stroke-dasharray="4,4" opacity="0.3"/>
+                        <circle cx="100" cy="100" r="60" fill="none"
+                                stroke="var(--warm-gold)" stroke-width="2"
+                                stroke-dasharray="4,4" opacity="0.3"/>
+                        <circle cx="100" cy="100" r="40" fill="none"
+                                stroke="var(--primary-light)" stroke-width="2"
+                                stroke-dasharray="4,4" opacity="0.3"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="screen">
+            <div class="result-content">
+                <h1 class="result-title">友情分析報告</h1>
+                <p class="result-subtitle">平昕與宜潔的默契指數</p>
+
+                <div class="result-score">
+                    <div class="score-number" id="total-score">85</div>
+                    <div class="score-label">總分</div>
+                    <div class="score-correct">答對 <span id="correct-count">20</span> / <span id="result-total-questions">5</span> 題</div>
+                </div>
+
+                <!-- 五角雷達圖 -->
+                <div class="radar-container">
+                    <div id="radar-chart"></div>
+                </div>
+
+                <!-- 維度分析 -->
+                <div class="dimensions-analysis">
+                    <h3 class="analysis-title">各維度分析</h3>
+                    <div id="dimensions-list" class="dimensions-list">
+                        <!-- 動態生成 -->
+                    </div>
+                </div>
+
+                <!-- 友情類型分析 -->
+                <div class="friendship-analysis-section">
+                    <h3 class="analysis-title">你們的友情類型</h3>
+                    <div id="friendship-analysis">
+                        <!-- 動態生成友情類型和個人化評語 -->
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <button id="restart-button" class="btn btn-secondary">重新測驗</button>
+                    <button id="share-button" class="btn btn-primary">分享結果</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 載入資料與遊戲邏輯 -->
+    <script type="module" src="data.js"></script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>
