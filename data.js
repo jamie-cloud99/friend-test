@@ -153,6 +153,62 @@ const DIMENSION_LEVELS = {
 };
 
 /* --------------------------------------------------------------------------
+   記憶輪廓分析系統 - 溫暖風格
+   根據維度組合生成個性化的"記憶輪廓"分析
+   不強調答對率，而是強調"你是怎麼記得的"
+   -------------------------------------------------------------------------- */
+const MEMORY_PROFILE_TEMPLATES = {
+  // 高CARE + 高MEMORY + 高OBSERVATION：被好好記住的關係
+  CARE_MEMORY_OBSERVATION_HIGH__WARM: {
+    title: '這是一段被好好記住的關係',
+    body: '你記得的，不只是發生過什麼，而是我在那些時候被怎麼對待。那些被照顧、被理解的瞬間，對你來說從來不是小事。',
+    closing: '這種記得方式，本來就只會出現在很重要的關係裡。'
+  },
+
+  // 高CARE + 低MEMORY：事件可能模糊，人不會
+  CARE_HIGH_MEMORY_LOW__HUMOROUS: {
+    title: '事件可能模糊，人不會',
+    body: '你不一定記得事情的細節，但你總是很快知道誰需要被接住。比起時間線，你更在意的是當下的人。',
+    closing: '這其實也是一種很實用的天賦。'
+  },
+
+  // 高CARE + 高OBSERVATION：你一直有在留意
+  CARE_HIGH_OBSERVATION_HIGH__WARM_LIGHT: {
+    title: '你一直有在留意',
+    body: '你會注意到我當下的反應，也記得那些被好好對待的時刻。即使有些事情已經模糊，但那份在意一直都在。',
+    closing: '這是一種很自然、讓人舒服的靠近方式。'
+  },
+
+  // 高MEMORY + 低CARE：一起走過的痕跡
+  MEMORY_HIGH_CARE_LOW__WARM_LIGHT: {
+    title: '一起走過的痕跡',
+    body: '你對我們一起經歷過的事情記得很清楚。那些時間與片段，對你來說是真實存在過的。',
+    closing: '這是一種很可靠、很踏實的相處方式。'
+  },
+
+  // 高OBSERVATION + 低CARE/MEMORY：觀察力點滿
+  OBSERVATION_ONLY__HUMOROUS: {
+    title: '觀察力點滿',
+    body: '你其實看得很細，只是比較少被情緒牽著走。很多小地方你都有注意到，只是默默放在心裡。',
+    closing: '這種低調型的留意，也很有你的風格。'
+  },
+
+  // 高EMPATHY + 高UNDERSTANDING：默契和共鳴
+  EMPATHY_UNDERSTANDING_HIGH__WARM: {
+    title: '心靈的共鳴',
+    body: '你不只記得事件，你記得當時的感受。那些情緒的流動、想法的碰撞，你都感受到了。',
+    closing: '這是一種很深層的理解，超越了事實本身。'
+  },
+
+  // 所有維度都很低：一段舒服的相處
+  GENERIC_WARM__WARM_LIGHT: {
+    title: '一段舒服的相處',
+    body: '從你的回答裡，可以感覺到這段關係對你來說是輕鬆而自然的。不是每件事都記得，但相處的感覺是真實的。',
+    closing: '有些關係，就是這樣慢慢累積的。'
+  }
+};
+
+/* --------------------------------------------------------------------------
    擴展用：LINE 資料解析器
    用於將 LINE .txt 匯出檔解析為結構化資料
    -------------------------------------------------------------------------- */
@@ -247,6 +303,8 @@ export {
   STAGES, 
   FRIENDSHIP_TYPES,
   DIMENSION_LEVELS, 
+  MEMORY_PROFILE_TEMPLATES,
+  DIMENSION_MAX_SCORES,
   DataParser,
   loadQuestions
 };

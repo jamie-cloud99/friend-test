@@ -172,15 +172,15 @@
             </div>
         </div>
 
-        <!-- 結果畫面 -->
+        <!-- 結果畫面 1：分數和維度分析 -->
         <div id="result-screen" class="screen">
             <div class="result-content">
-                <h1 class="result-title">友情分析報告</h1>
-                <p class="result-subtitle">平昕與宜潔的默契指數</p>
+                <h1 class="result-title">友情回憶軌跡</h1>
+                <p class="result-subtitle">測驗完成</p>
 
                 <div class="result-score">
                     <div class="score-number" id="total-score">85</div>
-                    <div class="score-label">總分</div>
+                    <div class="score-label">默契指數</div>
                     <div class="score-correct">答對 <span id="correct-count">20</span> / <span id="result-total-questions">5</span> 題</div>
                 </div>
 
@@ -191,23 +191,34 @@
 
                 <!-- 維度分析 -->
                 <div class="dimensions-analysis">
-                    <h3 class="analysis-title">各維度分析</h3>
+                    <h3 class="analysis-title">各維度發展</h3>
                     <div id="dimensions-list" class="dimensions-list">
                         <!-- 動態生成 -->
                     </div>
                 </div>
 
-                <!-- 友情類型分析 -->
-                <div class="friendship-analysis-section">
-                    <h3 class="analysis-title">你們的友情類型</h3>
+                <div class="result-actions">
+                    <button id="view-analysis-button" class="btn btn-primary">查看記憶輪廓分析 ✨</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果畫面 2：記憶輪廓分析 -->
+        <div id="analysis-screen" class="screen">
+            <div class="result-content">
+                <h1 class="result-title">你們的記憶輪廓</h1>
+                <p class="result-subtitle">一段獨特的相處方式</p>
+
+                <!-- 記憶輪廓分析 -->
+                <div class="memory-profile-container">
                     <div id="friendship-analysis">
-                        <!-- 動態生成友情類型和個人化評語 -->
+                        <!-- 動態生成記憶輪廓分析 -->
                     </div>
                 </div>
 
                 <div class="result-actions">
                     <button id="restart-button" class="btn btn-secondary">重新測驗</button>
-                    <button id="share-button" class="btn btn-primary">分享結果</button>
+                    <button id="share-button" class="btn btn-primary">分享我的軌跡 🎯</button>
                 </div>
             </div>
         </div>

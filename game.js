@@ -12,6 +12,8 @@ import {
   STAGES,
   DIMENSION_LEVELS,
   FRIENDSHIP_TYPES,
+  MEMORY_PROFILE_TEMPLATES,
+  DIMENSION_MAX_SCORES,
   loadQuestions
 } from './data.js';
 
@@ -503,6 +505,7 @@ class TransitionScreen {
 class ResultScreen {
   constructor(game) {
     this.game = game;
+    this.normalizedScores = null;
   }
 
   show() {
@@ -513,17 +516,27 @@ class ResultScreen {
     document.getElementById('correct-count').textContent = this.game.state.correctCount;
     document.getElementById('result-total-questions').textContent = this.game.state.totalQuestions;
 
-    const normalizedScores = this.normalizeScores();
-    const radar = new RadarChart('radar-chart', normalizedScores);
+    this.normalizedScores = this.normalizeScores();
+    const radar = new RadarChart('radar-chart', this.normalizedScores);
     radar.render();
 
-    this.showDimensionAnalysis(normalizedScores);
-    this.showFriendshipType(normalizedScores);
+    this.showDimensionAnalysis(this.normalizedScores);
+
+    // 綁定「查看記憶輪廓分析」按鈕
+    document.getElementById('view-analysis-button').onclick = () => this.showAnalysisScreen();
+
+    this.game.showScreen(resultScreen);
+  }
+
+  showAnalysisScreen() {
+    const analysisScreen = document.getElementById('analysis-screen');
+    
+    this.showFriendshipType(this.normalizedScores);
 
     document.getElementById('restart-button').onclick = () => location.reload();
     document.getElementById('share-button').onclick = () => this.shareResults();
 
-    this.game.showScreen(resultScreen);
+    this.game.showScreen(analysisScreen);
   }
 
   normalizeScores() {
@@ -589,143 +602,84 @@ class ResultScreen {
   showFriendshipType(normalizedScores) {
     const scores = this.game.state.scores;
     
-    // 判定友情類型
-    let friendshipType = null;
+    // 根據維度組合判定記憶輪廓模板
+    const template = this.detectMemoryProfile(normalizedScores, scores);
     
-    // 檢查是否符合特定類型的條件
-    for (const [key, type] of Object.entries(FRIENDSHIP_TYPES)) {
-      if (Object.keys(type.minScores).length === 0) continue; // 跳過預設類型
-      
-      const meetsRequirements = Object.entries(type.minScores).every(
-        ([dim, minScore]) => normalizedScores[dim] >= minScore
-      );
-      
-      if (meetsRequirements) {
-        friendshipType = type;
-        break;
-      }
-    }
+    // 記錄友情類型名稱（用於分享）
+    this.friendshipType = template.title;
     
-    // 如果沒有符合特定類型，使用預設邏輯
-    if (!friendshipType) {
-      const avgScore = Object.values(normalizedScores).reduce((a, b) => a + b, 0) / Object.values(normalizedScores).length;
-      
-      if (avgScore >= 60) {
-        friendshipType = FRIENDSHIP_TYPES.balanced;
-      } else {
-        friendshipType = FRIENDSHIP_TYPES.explorer;
-      }
-    }
-    
-    this.friendshipType = friendshipType.name;
-    
-    // 產生心理測驗式的個人化評語（幽默風格）
-    const analysis = this.generatePersonalizedAnalysis(normalizedScores, friendshipType);
-    
-    // 顯示友情類型和分析
+    // 顯示記憶輪廓分析
     const analysisContainer = document.getElementById('friendship-analysis');
     if (analysisContainer) {
       analysisContainer.innerHTML = `
-        <div class="friendship-type-card">
-          <div class="friendship-emoji">${friendshipType.emoji}</div>
-          <h3 class="friendship-type-name">${friendshipType.name}</h3>
-        </div>
-        <div class="friendship-analysis-text">
-          ${analysis.map(para => `<p>${para}</p>`).join('')}
+        <div class="memory-profile">
+          <h3 class="profile-title">${template.title}</h3>
+          <p class="profile-body">${template.body}</p>
+          <p class="profile-closing">${template.closing}</p>
         </div>
       `;
     }
   }
 
   /**
-   * 產生個人化分析評語（幽默風格）
+   * 檢測維度組合並選擇對應的記憶輪廓模板
+   * 根據維度分數組合判定最適合的分析模板
    */
-  generatePersonalizedAnalysis(normalizedScores, friendshipType) {
-    const analysis = [];
-    const totalScore = this.game.state.getTotalScore();
-    const correctCount = this.game.state.correctCount;
-    const totalQuestions = this.game.state.totalQuestions;
+  detectMemoryProfile(normalizedScores, rawScores) {
+    // 提取高低維度（以65分為分界線）
+    const high = {};
+    const low = {};
     
-    // 第一段：整體表現（幽默開場）
-    if (totalScore >= 80) {
-      analysis.push(`哇喔！${totalScore}分！你們這是要申請「國家級好友」認證嗎？這個分數高到讓人懷疑你們是不是共用一個大腦。答對了${correctCount}/${totalQuestions}題，基本上已經可以去參加朋友版的「誰是臥底」了。`);
-    } else if (totalScore >= 60) {
-      analysis.push(`${totalScore}分，表現不錯！${correctCount}/${totalQuestions}題的正確率證明你們的友情是真材實料，雖然偶爾會有點「選擇性失憶」，但整體來說還是很靠譜的。起碼不會把朋友的生日記成忌日（吧？）。`);
-    } else if (totalScore >= 40) {
-      analysis.push(`${totalScore}分...嗯...怎麼說呢？${correctCount}/${totalQuestions}的成績證明你們的友情還在「探索期」。建議多聊聊天，或許可以考慮開始吃銀杏？不過別擔心，友情這種東西本來就需要時間慢慢培養嘛。`);
-    } else {
-      analysis.push(`${totalScore}分...確定你們真的是朋友嗎？（笑）${correctCount}/${totalQuestions}的答對率讓人懷疑你們是不是在玩「猜猜我是誰」。不過沒關係，從今天開始好好經營友情還來得及！畢竟「不打不相識」嘛。`);
-    }
-    
-    // 第二段：根據友情類型給予特色評語
-    const typeAnalysis = this.getTypeSpecificAnalysis(friendshipType);
-    analysis.push(typeAnalysis);
-    
-    // 第三段：維度分析（挑最高和最低的維度調侃）
-    const dimensionAnalysis = this.getDimensionJoke(normalizedScores);
-    analysis.push(dimensionAnalysis);
-    
-    return analysis;
-  }
+    Object.entries(normalizedScores).forEach(([dim, score]) => {
+      if (score >= 65) {
+        high[dim] = score;
+      } else {
+        low[dim] = score;
+      }
+    });
 
-  /**
-   * 根據友情類型產生特色評語
-   */
-  getTypeSpecificAnalysis(friendshipType) {
-    const typeName = friendshipType.name;
+    const highDims = Object.keys(high);
+    const lowDims = Object.keys(low);
     
-    const analyses = {
-      '同甘共苦型': '你們的同理心和理解力簡直爆表，大概是那種「對方一個眼神就知道要幹嘛」的境界。不過提醒一下，偶爾也要記得朋友喜歡吃什麼，不然每次聚餐都要重新問一遍也是滿尷尬的。',
-      '回憶收藏家': '你們根本是行走的「友情時光機」，連三年前的某個笑話都記得一清二楚。唯一的問題是，會不會太執著於過去啦？偶爾也要創造一些新回憶喔！',
-      '細心守護型': '你們的觀察力和細心度讓人佩服，大概是那種「會記得朋友隨口說過想吃什麼」的類型。不過也別太緊迫盯人，有時候朋友只是隨口說說而已啦。',
-      '心有靈犀型': '你們的默契好到令人嫉妒，簡直像是裝了心電感應器。不過偶爾還是要「說出口」，畢竟你們還沒有真的能讀心術...吧？',
-      '全方位好友': '你們的友情發展很均衡，就像一個完美的五邊形（雖然雷達圖上可能沒那麼完美）。沒有明顯短板，但也沒有特別突出的地方。這樣也好，至少不會讓人覺得你們的友情「偏科」。',
-      '持續探索型': '你們還在探索彼此，就像是剛開始玩一款新遊戲。別急，友情這種東西是需要時間慢慢「升級」的。多聊聊天、多見見面，總有一天會從「青銅」打到「王者」的！'
-    };
+    // 檢查特定的高分組合模式
     
-    return analyses[typeName] || '你們的友情很獨特，連AI都分析不出來是什麼類型。恭喜你們創造了新的友情模式！';
-  }
-
-  /**
-   * 根據維度分數產生幽默評語
-   */
-  getDimensionJoke(scores) {
-    const dims = Object.entries(scores).map(([key, value]) => ({
-      key,
-      name: DIMENSIONS[key],
-      value
-    })).sort((a, b) => b.value - a.value);
-    
-    const highest = dims[0];
-    const lowest = dims[dims.length - 1];
-    
-    let joke = `看看你們的強項：「${highest.name}」拿了${highest.value}分，`;
-    
-    if (highest.value >= 80) {
-      joke += '根本是滿級大神的水準！';
-    } else if (highest.value >= 60) {
-      joke += '表現可圈可點！';
-    } else {
-      joke += '嗯...至少比其他項目好一點？';
+    // 1. 高CARE + 高MEMORY + 高OBSERVATION：被好好記住的關係
+    if (highDims.includes('care') && highDims.includes('memory') && highDims.includes('observation')) {
+      return MEMORY_PROFILE_TEMPLATES.CARE_MEMORY_OBSERVATION_HIGH__WARM;
     }
     
-    joke += ` 至於「${lowest.name}」只有${lowest.value}分，`;
-    
-    if (lowest.value < 40) {
-      joke += '這個...要不要去醫院檢查一下記憶力？（開玩笑的啦）建議多花點心思在這方面，友情需要全方位經營嘛！';
-    } else if (lowest.value < 60) {
-      joke += '還有進步空間。不過沒關係，知道哪裡不足就好辦了，對症下藥就好！';
-    } else {
-      joke += '其實也不差啦！你們根本沒有明顯的弱項，真是讓人羨慕。';
+    // 2. 高CARE + 低MEMORY：事件可能模糊，人不會
+    if (highDims.includes('care') && lowDims.includes('memory') && !highDims.includes('observation')) {
+      return MEMORY_PROFILE_TEMPLATES.CARE_HIGH_MEMORY_LOW__HUMOROUS;
     }
     
-    return joke;
+    // 3. 高CARE + 高OBSERVATION（不管MEMORY）：你一直有在留意
+    if (highDims.includes('care') && highDims.includes('observation')) {
+      return MEMORY_PROFILE_TEMPLATES.CARE_HIGH_OBSERVATION_HIGH__WARM_LIGHT;
+    }
+    
+    // 4. 高MEMORY + 低CARE：一起走過的痕跡
+    if (highDims.includes('memory') && lowDims.includes('care') && !highDims.includes('observation')) {
+      return MEMORY_PROFILE_TEMPLATES.MEMORY_HIGH_CARE_LOW__WARM_LIGHT;
+    }
+    
+    // 5. 高OBSERVATION + 低CARE和MEMORY：觀察力點滿
+    if (highDims.includes('observation') && lowDims.includes('care') && lowDims.includes('memory')) {
+      return MEMORY_PROFILE_TEMPLATES.OBSERVATION_ONLY__HUMOROUS;
+    }
+    
+    // 6. 高EMPATHY + 高UNDERSTANDING：心靈的共鳴
+    if (highDims.includes('empathy') && highDims.includes('understanding') && !highDims.includes('care')) {
+      return MEMORY_PROFILE_TEMPLATES.EMPATHY_UNDERSTANDING_HIGH__WARM;
+    }
+    
+    // 預設：一段舒服的相處（當沒有特定組合時）
+    return MEMORY_PROFILE_TEMPLATES.GENERIC_WARM__WARM_LIGHT;
   }
 
   shareResults() {
-    const totalScore = this.game.state.getTotalScore();
-    const friendshipType = this.friendshipType || '友情';
-    const text = `我在「友情記憶測驗」中獲得了 ${totalScore} 分！完成了平昕與宜潔的回憶之旅，友情類型是「${friendshipType}」。`;
+    const memoryProfile = this.friendshipType || '我們的友情';
+    const text = `我在「友情記憶測驗」中發現了一段獨特的相處方式：「${memoryProfile}」。完成了平昕與宜潔的回憶之旅。`;
 
     if (navigator.share) {
       navigator.share({
