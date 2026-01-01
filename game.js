@@ -528,12 +528,17 @@ class ResultScreen {
 
   normalizeScores() {
     const scores = this.game.state.scores;
-    const values = Object.values(scores);
-    const maxScore = Math.max(...values);
-
+    
     const normalized = {};
     Object.keys(scores).forEach(dim => {
+      // 使用該維度自己的最大分數來計算占比
+      const maxScore = DIMENSION_MAX_SCORES[dim] || 100;
       normalized[dim] = maxScore > 0 ? Math.round((scores[dim] / maxScore) * 100) : 0;
+      
+      // 確保分數不超過 100
+      if (normalized[dim] > 100) {
+        normalized[dim] = 100;
+      }
     });
 
     return normalized;
