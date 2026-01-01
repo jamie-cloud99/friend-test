@@ -111,9 +111,14 @@
                         <!-- 訊息會動態插入這裡 -->
                     </div>
                 </div>
-                <button id="skip-chat-button" class="btn btn-secondary skip-chat-btn">
-                    跳過對話 ⏭
-                </button>
+                <div class="chat-actions">
+                    <button id="skip-chat-button" class="btn btn-secondary chat-action-btn">
+                        跳過對話 ⏭
+                    </button>
+                    <button id="view-answer-button" class="btn btn-secondary chat-action-btn">
+                        查看答案
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -159,6 +164,11 @@
                                 stroke-dasharray="4,4" opacity="0.3"/>
                     </svg>
                 </div>
+
+                <!-- 下一題按鈕 -->
+                <button id="transition-next-button" class="btn btn-primary transition-next-btn">
+                    下一題
+                </button>
             </div>
         </div>
 

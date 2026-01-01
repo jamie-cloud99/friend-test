@@ -388,32 +388,38 @@ class QuestionScreen {
     const isCorrect = optionId === this.question.correctAnswer;
 
     // 切換到對話回顧畫面
-    await this.showChatReplay();
-
-    // 播放完對話後，顯示答案反饋
-    await this.delay(1200);
-    await this.showAnswerFeedback(isCorrect);
-
-    this.game.state.recordAnswer(this.question.id, optionId, isCorrect, 0);
+    await this.showChatReplay(isCorrect);
   }
 
-  async showChatReplay() {
+  async showChatReplay(isCorrect) {
     // 切換到對話回顧畫面
     const chatReplayScreen = document.getElementById('chat-replay-screen');
     const skipButton = document.getElementById('skip-chat-button');
-    
+    const viewAnswerButton = document.getElementById('view-answer-button');
+
     this.game.showScreen(chatReplayScreen);
-    
+
+    // 初始狀態：「查看答案」禁用，「跳過對話」啟用
+    skipButton.disabled = false;
+    viewAnswerButton.disabled = true;
+
     // 設置跳過按鈕事件
     skipButton.onclick = () => {
       this.game.lineChat.skip();
     };
 
+    // 綁定「查看答案」按鈕事件
+    viewAnswerButton.onclick = async () => {
+      await this.showAnswerFeedback(isCorrect);
+      this.game.state.recordAnswer(this.question.id, this.selectedOption, isCorrect, 0);
+    };
+
     // 播放對話回顧（選完答案後的驚喜）
-    const wasSkipped = await this.game.lineChat.playConversation(this.question.conversation);
-    
-    // 跳過時只等待  0ms，正常播放等待 800ms
-    await this.delay(wasSkipped ? 0 : 800);
+    await this.game.lineChat.playConversation(this.question.conversation);
+
+    // 對話播放完成後，禁用「跳過對話」，啟用「查看答案」
+    skipButton.disabled = true;
+    viewAnswerButton.disabled = false;
   }
 
   async showAnswerFeedback(isCorrect) {
@@ -471,6 +477,12 @@ class TransitionScreen {
     const progressFill = document.getElementById('transition-progress-fill');
     const percentage = (this.game.state.currentQuestion / this.game.state.totalQuestions) * 100;
     progressFill.style.width = `${percentage}%`;
+
+    // 綁定「下一題」按鈕事件
+    const nextButton = document.getElementById('transition-next-button');
+    if (nextButton) {
+      nextButton.onclick = () => this.game.showNextQuestion();
+    }
 
     this.game.showScreen(transitionScreen);
   }
@@ -612,7 +624,6 @@ class ResultScreen {
         <div class="friendship-type-card">
           <div class="friendship-emoji">${friendshipType.emoji}</div>
           <h3 class="friendship-type-name">${friendshipType.name}</h3>
-          <p class="friendship-type-description">${friendshipType.description}</p>
         </div>
         <div class="friendship-analysis-text">
           ${analysis.map(para => `<p>${para}</p>`).join('')}
@@ -642,7 +653,7 @@ class ResultScreen {
     }
     
     // 第二段：根據友情類型給予特色評語
-    const typeAnalysis = this.getTypeSpecificAnalysis(friendshipType, normalizedScores);
+    const typeAnalysis = this.getTypeSpecificAnalysis(friendshipType);
     analysis.push(typeAnalysis);
     
     // 第三段：維度分析（挑最高和最低的維度調侃）
@@ -655,7 +666,7 @@ class ResultScreen {
   /**
    * 根據友情類型產生特色評語
    */
-  getTypeSpecificAnalysis(friendshipType, scores) {
+  getTypeSpecificAnalysis(friendshipType) {
     const typeName = friendshipType.name;
     
     const analyses = {
@@ -766,24 +777,42 @@ class FriendshipMemoryGame {
   // 隨機選取題目（分層隨機抽樣）
   randomSelectQuestions(count) {
     const result = [];
+
+    // 新的題目類型對應（移除了 emotion-understanding 和 interaction-pattern）
+    // 新增了 opinion-expression、action-motivation、action-intention
     const typeRatios = {
-      'detail-observation': 0.35,
-      'context-recall': 0.30,
-      'emotion-understanding': 0.20,
-      'interaction-pattern': 0.10,
-      'preference-memory': 0.05
+      'detail-observation': 0.35,    // 細節觀察 -> 觀察力
+      'context-recall': 0.30,        // 情境回憶 -> 記憶力
+      'opinion-expression': 0.15,    // 評價觀點 -> 默契度
+      'action-motivation': 0.10,     // 行為動機 -> 同理心
+      'action-intention': 0.05,      // 行為意圖 -> 默契度
+      'preference-memory': 0.05      // 偏好記憶 -> 細心度
     };
 
-    Object.entries(typeRatios).forEach(([type, ratio]) => {
+    // 使用 Math.floor 避免四捨五入導致總數超出
+    let allocated = 0;
+    const typeSelections = [];
+
+    Object.entries(typeRatios).forEach(([type, ratio], index, arr) => {
       const typeQuestions = QUESTIONS.filter(q => q.type === type);
-      const selectCount = Math.round(count * ratio);
+
+      // 最後一個類型分配剩餘所有名額，避免四捨五入誤差
+      let selectCount;
+      if (index === arr.length - 1) {
+        selectCount = count - allocated;
+      } else {
+        selectCount = Math.floor(count * ratio);
+        allocated += selectCount;
+      }
 
       // Fisher-Yates 洗牌
       const shuffled = [...typeQuestions].sort(() => Math.random() - 0.5);
-      result.push(...shuffled.slice(0, Math.min(selectCount, shuffled.length)));
+      typeSelections.push(...shuffled.slice(0, Math.min(selectCount, shuffled.length)));
     });
 
-    // 如果結果不足，從所有題目中隨機補充
+    result.push(...typeSelections);
+
+    // 如果結果不足（某些類型題目數不夠），從所有題目中隨機補充
     while (result.length < count && result.length < QUESTIONS.length) {
       const remaining = QUESTIONS.filter(q => !result.includes(q));
       if (remaining.length === 0) break;
@@ -835,7 +864,7 @@ class FriendshipMemoryGame {
     const stage = this.state.getCurrentStage();
     const transition = new TransitionScreen(this, stage);
     transition.show();
-    await transition.autoAdvance();
+    // 移除自動換頁功能，改由使用者點擊按鈕控制
   }
 
   showResults() {
@@ -860,7 +889,6 @@ class FriendshipMemoryGame {
    -------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', async () => {
   // 顯示載入提示
-  const startScreen = document.getElementById('start-screen');
   const startButton = document.getElementById('start-button');
   const originalButtonText = startButton ? startButton.textContent : '';
   

@@ -597,12 +597,28 @@ button {
   margin: 0 auto;
 }
 
-.skip-chat-btn {
+.chat-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
   margin-top: var(--spacing-md);
-  font-size: 14px;
-  padding: var(--spacing-sm) var(--spacing-lg);
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
   opacity: 0;
   animation: fadeIn 0.5s ease-out 1s forwards;
+}
+
+.chat-action-btn {
+  font-size: 14px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  flex: 1;
+}
+
+.chat-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
    .line-chat-container {
@@ -909,9 +925,11 @@ button {
    過場畫面
    -------------------------------------------------------------------------- */
 .transition-content {
+  position: relative;
   text-align: center;
   padding: var(--spacing-2xl) 0;
   width: 100%;
+  min-height: 500px;
 }
 
 .transition-progress {
@@ -963,6 +981,33 @@ button {
 
 .transition-decoration svg {
   animation: float 6s ease-in-out infinite;
+}
+
+/* 過場畫面「下一題」按鈕 */
+.transition-next-btn {
+  position: absolute;
+  bottom: var(--spacing-2xl);
+  right: var(--spacing-2xl);
+  animation: fadeInUp 1.4s var(--ease-smooth) 0.8s both;
+  z-index: 10;
+}
+
+/* 響應式調整 - 平板及以下 */
+@media (max-width: 768px) {
+  .transition-next-btn {
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+  }
+}
+
+/* 響應式調整 - 小型手機 */
+@media (max-width: 480px) {
+  .transition-next-btn {
+    position: static;
+    margin-top: var(--spacing-2xl);
+    width: 100%;
+    max-width: 200px;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1172,6 +1217,10 @@ button {
   color: var(--neutral-700);
   margin-top: var(--spacing-sm);
   font-style: italic;
+}
+
+.friendship-analysis-section {
+  padding: 4rem;
 }
 
 /* 結果操作按鈕 */
