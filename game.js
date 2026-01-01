@@ -760,8 +760,8 @@ class FriendshipMemoryGame {
         // 更新提示文字
         const hints = {
           10: '約 8-10 分鐘',
-          15: '約 12-15 分鐘',
-          20: '約 15-20 分鐘'
+          25: '約 20-25 分鐘',
+          50: '約 40-50 分鐘'
         };
         document.querySelector('.selector-hint').textContent =
           `預設 ${this.selectedQuestionCount} 題，${hints[this.selectedQuestionCount]}`;
@@ -777,6 +777,11 @@ class FriendshipMemoryGame {
   // 隨機選取題目（分層隨機抽樣）
   randomSelectQuestions(count) {
     const result = [];
+
+    // 如果請求的題目數超過題庫總數，直接返回全部題目
+    if (count >= QUESTIONS.length) {
+      return [...QUESTIONS].sort(() => Math.random() - 0.5);
+    }
 
     // 新的題目類型對應（移除了 emotion-understanding 和 interaction-pattern）
     // 新增了 opinion-expression、action-motivation、action-intention
@@ -812,8 +817,8 @@ class FriendshipMemoryGame {
 
     result.push(...typeSelections);
 
-    // 如果結果不足（某些類型題目數不夠），從所有題目中隨機補充
-    while (result.length < count && result.length < QUESTIONS.length) {
+    // 如果結果不足（某些類型題目數不夠），從所有未選中的題目中隨機補充
+    while (result.length < count) {
       const remaining = QUESTIONS.filter(q => !result.includes(q));
       if (remaining.length === 0) break;
       const randomQ = remaining[Math.floor(Math.random() * remaining.length)];
